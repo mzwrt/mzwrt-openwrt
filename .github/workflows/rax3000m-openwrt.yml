@@ -22,12 +22,7 @@ jobs:
       
     - name: Move repo to /mnt/openwrt
       run: |
-        echo "======================="
-        ls
-        echo "======================="
-        cd mzwrt-openwrt && ls
-        echo "======================="
-        mv ./config /mnt/openwrt/
+        mv ./mzwrt-openwrt /mnt/openwrt/
     
     # 1. Clone Repository
     - name: Clone Repository
@@ -75,7 +70,7 @@ jobs:
       run: |
         git clone -b $OPENWRT_VERSION --single-branch --depth=1 $REPO_URL $OPENWRT_DIR
         cd openwrt
-        cp -f ../config/mzwrt-openwrt/diy1.sh ./
+        cp -f ../mzwrt-openwrt/diy1.sh ./
         chmod +x ./diy1.sh && ./diy1.sh
 
     # 5. Update & Install feeds
@@ -86,14 +81,14 @@ jobs:
       run: |
         ./scripts/feeds update -a
         ./scripts/feeds install -a
-        cp -f ../config/mzwrt-openwrt/diy2.sh ./
+        cp -f ../mzwrt-openwrt/diy2.sh ./
         chmod +x ./diy2.sh && ./diy2.sh
 
     # 6. Configuration Customization
     - name: Configuration Customization - Build_mt7981_rax3000m
       working-directory: /mnt/openwrt/openwrt
       run: |
-        cp -f ../config/mzwrt-openwrt/rax3000m.config ./
+        cp -f ../mzwrt-openwrt/rax3000m.config ./
         mv rax3000m.config .config
         make defconfig
 
