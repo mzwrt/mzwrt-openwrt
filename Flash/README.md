@@ -2,6 +2,8 @@
 
 本指南面向 **NAND 版 CMCC RAX3000M 路由器**，假设已经刷入了 H 大 U-Boot。通过四个步骤，即可成功刷入 OpenWrt 官方固件。
 
+
+
 > ⚠️ **注意**：刷机有风险，请确保电源稳定。按照步骤操作可降低风险。
 
 > ⚠️ **注意**：假设你是新机请直接跳过第一步从第二步开始操作直接刷入U-boot即可！！
@@ -20,7 +22,7 @@
    - `recovery.itb`
    - `sysupgrade.itb`
 5. 准备好 U-Boot 固件：
-   - `U-boot.bin` [下载链接](https://drive.wrt.moe/uboot/mediatek)
+   - `U-boot.bin` <a href="https://drive.wrt.moe/uboot/mediatek" target="_blank">下载链接</a>
 
 本页面也提供了所有文件，是基于openwrt官方的文件用于救砖，**mtd1_BL2.bin**是官方备份出来的，**preloader**是openwrt官方文件
 
@@ -38,12 +40,12 @@
 ---
 
 ## 刷机步骤
-> ⚠️ **注意**：这个是 NAND 版 如果是 EMMC版本 多一个步骤，在步骤一之前进U-boot后访问 [http://192.168.1.1/gpt.html](http://192.168.1.1/gpt.html) 然后刷入EMMC-GPT.bin后再继续按照步骤一继续操作即可
+> ⚠️ **注意**：这个是 NAND 版 如果是EMMC版本多一个步骤，在步骤一之前进U-boot后访问 <a href="http://192.168.1.1/gpt.html" target="_blank">http://192.168.1.1/gpt.html</a> 然后刷入EMMC-GPT.bin后再继续按照步骤一继续操作即可
 ### **步骤 1：刷 Preloader**
 
 1. 路由器按 **复位键** 进入 U-Boot。
 2. 在浏览器中访问：
-http://192.168.1.1/bl2.html
+<a href="http://192.168.1.1/bl2.html" target="_blank">http://192.168.1.1/bl2.html</a>
 
 3. 刷入 **OpenWrt 官方 preloader.bin** 文件。
 4. 完成后，路由器重启进入 U-Boot。
@@ -53,7 +55,7 @@ http://192.168.1.1/bl2.html
 ### **步骤 2：刷 U-Boot**
 
 1. 浏览器访问：
-http://192.168.1.1/uboot.html
+<a href="http://192.168.1.1/uboot.html" target="_blank">http://192.168.1.1/uboot.html</a>
 
 2. 刷入带有 **U-Boot.bin** 的固件。
 3. 完成后，进入新的 U-Boot。
