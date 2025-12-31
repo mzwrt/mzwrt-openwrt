@@ -38,6 +38,7 @@ jobs:
       
     - name: Move repo to /mnt/openwrt
       run: |
+        sudo chown -R $USER:$USER ./mzwrt-openwrt
         mv ./mzwrt-openwrt /mnt/openwrt/
 
     # 3. Initialization environment
