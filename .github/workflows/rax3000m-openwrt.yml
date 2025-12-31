@@ -12,7 +12,10 @@ jobs:
   Build_mt7981_rax3000m:
     runs-on: ubuntu-22.04
     steps:
-    
+    - name: Get Actions Count
+      run: |
+          actions_count=$(gh run list --limit 10 --json status | grep "completed" | wc -l)
+          echo "Actions count: $actions_count"
     # 1. Clone Repository
     - name: Clone Repository
       uses: actions/checkout@v4
