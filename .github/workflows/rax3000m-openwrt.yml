@@ -25,6 +25,8 @@ jobs:
         echo "======================="
         ls
         echo "======================="
+        cd mzwrt-openwrt && ls
+        echo "======================="
         mv ./config /mnt/openwrt/
     
     # 1. Clone Repository
