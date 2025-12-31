@@ -23,7 +23,7 @@ jobs:
     - name: Move repo to /mnt/openwrt
       run: |
         echo "======================="
-        echo ls
+        ls
         echo "======================="
         mv ./config /mnt/openwrt/
     
