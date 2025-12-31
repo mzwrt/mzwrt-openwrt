@@ -120,6 +120,7 @@ jobs:
         echo "======================="
         pwd
         echo "======================="
+        echo "llvm.download-ci-llvm=if-unchanged" >> $GITHUB_ENV
         make -j$(nproc) || make -j1 V=99
         echo "======================="
         echo "Space usage:"
