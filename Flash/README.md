@@ -43,8 +43,6 @@
 2. 在浏览器中访问：
 http://192.168.1.1/bl2.html
 
-yaml
-复制代码
 3. 刷入 **OpenWrt 官方 preloader.bin** 文件。
 4. 完成后，路由器重启进入 U-Boot。
 
@@ -55,8 +53,6 @@ yaml
 1. 浏览器访问：
 http://192.168.1.1/uboot.html
 
-yaml
-复制代码
 2. 刷入带有 **U-Boot.bin** 的固件。
 3. 完成后，进入新的 U-Boot。
 
