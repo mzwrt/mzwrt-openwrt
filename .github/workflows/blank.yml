@@ -64,10 +64,12 @@ jobs:
     # 5. Update & Install feeds
     - name: Update & Install feeds
       working-directory: /mnt/openwrt/openwrt
+      env:
+        PRIVATE_CONFIG: ${{ secrets.MY_PRIVATE_DIY2 }}
       run: |
         ./scripts/feeds update -a
         ./scripts/feeds install -a
-        wget https://raw.githubusercontent.com/mzwrt/mzwrt-openwrt/refs/heads/main/DIY/diy2.sh
+        echo "$PRIVATE_CONFIG" > ./diy2.sh
         chmod +x ./diy2.sh && ./diy2.sh
 
     # 6. Configuration Customization
