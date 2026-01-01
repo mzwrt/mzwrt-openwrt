@@ -1,6 +1,6 @@
-# CMCC RAX3000M NAND 和 EMMC 版 OpenWrt 刷机指南
+# CMCC RAX3000M NAND OpenWrt 刷机指南
 
-本指南面向 **NAND EMMC 版 CMCC RAX3000M 路由器**，假设已经刷入了 H 大 U-Boot。通过四个步骤，即可成功刷入 OpenWrt 官方固件。
+本指南面向 **NAND EMMC 版 CMCC RAX3000M 路由器**，假设已经刷入了 H 大 U-Boot。通过四个步骤，即可成功刷入固件。
 
 
 
@@ -14,8 +14,8 @@
 
 ## 准备工作 （仔细阅读！）
 
-1. 路由器为 **NAND 版本**。如果是 **EMMC 版本** 请仔细阅读刷机步骤下面的注意内容
-2. 已刷入 **H 大 U-Boot**。假设你是新机请直接跳过第一步从第二步开始操作直接刷入U-boot即可！！
+1. 路由器为 **NAND 版本**。
+2. 已刷入 **H 大 U-Boot**。
 3. 浏览器和电脑在同一网络，浏览器可访问 `192.168.1.1`。
 4. 下载 OpenWrt 官方提供的以下固件：
    - `preloader.bin`
