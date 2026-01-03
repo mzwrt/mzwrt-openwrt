@@ -10,7 +10,7 @@ on:
 
 jobs:
   Build_mt7981_rax3000m:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
     - name: Get Actions Count
       run: |
@@ -33,7 +33,7 @@ jobs:
           echo "/dev/$largest_disk /mnt/openwrt ext4 defaults 0 2" | sudo tee -a /etc/fstab
 
     - name: Checkout private repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: 'mzwrt/config'
         token: ${{ secrets.GH_TOKEN }}
@@ -49,21 +49,14 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo -E swapoff -a
-        sudo -E rm -f /swapfile
-        sudo -E apt-mark hold grub-efi-amd64-signed
-        sudo -E apt -y purge azure-cli* docker* ghc* zulu* llvm* firefox google* dotnet* powershell* openjdk* mysql* php* mongodb* dotnet* snap*
-        sudo -E rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android
+        sudo -E apt update
         sudo -E apt update
         sudo -E apt -y upgrade
         sudo -E apt -y full-upgrade
-        sudo -E apt install -y libnuma-dev libfdt-dev libtorrent-rasterbar-dev clang golang rustc cargo m4 babeltrace libunwind-dev texinfo binutils binutils-gold liblzma-dev libzstd-dev autoconf automake ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
-        sudo -E apt -y autoremove --purge
+        sudo -E apt install -y libnuma-dev libfdt-dev libtorrent-rasterbar-dev clang golang rustc cargo m4 babeltrace libunwind-dev texinfo binutils binutils-gold liblzma-dev libzstd-dev autoconf automake ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip
         sudo -E systemctl daemon-reload
-        sudo -E apt clean
         sudo -E timedatectl set-timezone "Asia/Shanghai"
-        sudo apt install -y llvm clang rustc cargo
-        git config --global user.name 'GitHub Actions' && git config --global user.email '${{ secrets.GH_MAIL }}'
+        git config --global user.name 'GitHub Actions' && git config --global user.email 'your-email@example.com'
 
     # 4. Clone source code
     - name: Clone source code
