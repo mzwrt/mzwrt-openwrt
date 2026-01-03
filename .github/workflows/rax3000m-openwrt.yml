@@ -62,6 +62,7 @@ jobs:
         sudo -E systemctl daemon-reload
         sudo -E apt clean
         sudo -E timedatectl set-timezone "Asia/Shanghai"
+        sudo apt install -y llvm clang rustc cargo
         git config --global user.name 'GitHub Actions' && git config --global user.email '${{ secrets.GH_MAIL }}'
 
     # 4. Clone source code
