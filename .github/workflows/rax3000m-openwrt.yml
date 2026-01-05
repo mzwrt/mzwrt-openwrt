@@ -78,8 +78,6 @@ jobs:
     # 5. Update & Install feeds
     - name: Update & Install feeds
       working-directory: /mnt/openwrt/openwrt
-      env:
-        PRIVATE_CONFIG: ${{ secrets.MY_PRIVATE_DIY2 }}
       run: |
         ./scripts/feeds update -a
         ./scripts/feeds install -a
