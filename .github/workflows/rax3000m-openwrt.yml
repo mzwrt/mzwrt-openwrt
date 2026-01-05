@@ -53,40 +53,74 @@ jobs:
         sudo apt-get remove --purge -y llvm* clang* lld* llvm-dev libclang* libllvm* liblld* clang-format gcc* g++* build-essential rustc cargo make cmake autoconf automake pkg-config
         echo "======================="
         sudo apt-get remove --purge -yqq llvm
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
 
         sudo apt-get remove --purge -yqq clang
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq lld
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq llvm-dev
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         echo "======================="
         sudo apt-get remove --purge -yqq libllvm
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq liblld
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq clang-format
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq gcc
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq g++
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq build-essential
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq rustc
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq cargo
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq make
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq cmake
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq autoconf
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq automake
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
         sudo apt-get remove --purge -yqq pkg-config
+        sudo apt-get -yqq autoremove --purge
+
         echo "======================="
 
         sudo apt-get update
