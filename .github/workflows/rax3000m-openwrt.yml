@@ -49,7 +49,7 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo apt-get remove --purge -yqq llvm* clang* lld* llvm-dev llvm-tools llvm-config libclang* libllvm* liblld* clang-format gcc* g++* build-essential rustc cargo make cmake autoconf automake pkg-config
+        sudo apt-get remove --purge -yqq llvm* clang* lld* llvm-dev libclang* libllvm* liblld* clang-format gcc* g++* build-essential rustc cargo make cmake autoconf automake pkg-config
         sudo -E apt-get update
         sudo -E apt-get -yqq upgrade
         sudo -E apt-get -yqq full-upgrade
