@@ -49,73 +49,6 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        echo "======================="
-        echo "======================="
-        sudo apt-get remove --purge -y llvm
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-
-        sudo apt-get remove --purge -y clang
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y lld
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y llvm-dev
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        echo "======================="
-
-        echo "======================="
-        sudo apt-get remove --purge -y clang-format
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y gcc
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y g++
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y build-essential
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y rustc
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y cargo
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y make
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y cmake
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        #sudo apt-get remove --purge -y autoconf
-        #sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y automake
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y pkg-config
-        sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-
         sudo apt-get update
         sudo apt-get -yqq upgrade
         sudo apt-get -yqq full-upgrade
@@ -154,22 +87,6 @@ jobs:
     - name: Configuration Customization - Build_mt7981_rax3000m
       working-directory: /mnt/openwrt/openwrt
       run: |
-        echo "======================="
-        echo "======================="
-        echo "======================="
-        cat package/feeds/packages/rust/Makefile
-        echo "======================="
-        echo "======================="
-        echo "======================="
-        echo "======================="
-        echo "======================="
-        echo "======================="
-        cat feeds/packages/lang/rust/Makefile
-        echo "======================="
-        echo "======================="
-   
-        echo "======================="
-   
         echo "======================="
         echo "======================="
         echo "======================="
