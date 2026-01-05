@@ -69,12 +69,6 @@ jobs:
 
         echo "======================="
         echo "======================="
-        #sudo apt-get remove --purge -y libllvm
-        #sudo apt-get -yqq autoremove --purge
-
-        echo "======================="
-        sudo apt-get remove --purge -y liblld
-        sudo apt-get -yqq autoremove --purge
 
         echo "======================="
         sudo apt-get remove --purge -y clang-format
