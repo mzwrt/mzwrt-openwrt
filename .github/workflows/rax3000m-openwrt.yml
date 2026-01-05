@@ -50,19 +50,21 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: |
         echo "======================="
-        sudo dpkg --get-selections | grep hold
+        sudo rm /var/lib/apt/lists/lock
+        sudo rm /var/cache/apt/archives/lock
+        sudo rm /var/lib/dpkg/lock*
         echo "======================="
         sudo apt-get remove --purge -yqq llvm* clang* lld* llvm-dev libclang* libllvm* liblld* clang-format gcc* g++* build-essential rustc cargo make cmake autoconf automake pkg-config
-        sudo -E apt-get update
-        sudo -E apt-get -yqq upgrade
-        sudo -E apt-get -yqq full-upgrade
-        sudo -E apt-get -yqq autoremove --purge
-        sudo -E apt-get -yqq autoclean
-        sudo -E apt-get -yqq clean
-        sudo -E apt-get install -yqq dos2unix python3-netifaces libfuse-dev libnuma-dev libfdt-dev libtorrent-rasterbar-dev clang golang rustc cargo m4 babeltrace libunwind-dev texinfo binutils binutils-gold liblzma-dev libzstd-dev autoconf automake ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip
-        sudo -E apt-get install -yqq build-essential python3-setuptools liblua5.1-0 libtool-bin libcrypto++-dev libpcre3 libpcre3-dev libpcre3 libpcre3-dev python3-pip python3-socks python3-socks python3-unidecode 
-        sudo -E systemctl daemon-reload
-        sudo -E timedatectl set-timezone "Asia/Shanghai"
+        sudo apt-get update
+        sudo apt-get -yqq upgrade
+        sudo apt-get -yqq full-upgrade
+        sudo apt-get -yqq autoremove --purge
+        sudo apt-get -yqq autoclean
+        sudo apt-get -yqq clean
+        sudo apt-get install -yqq dos2unix python3-netifaces libfuse-dev libnuma-dev libfdt-dev libtorrent-rasterbar-dev clang golang rustc cargo m4 babeltrace libunwind-dev texinfo binutils binutils-gold liblzma-dev libzstd-dev autoconf automake ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip
+        sudo apt-get install -yqq build-essential python3-setuptools liblua5.1-0 libtool-bin libcrypto++-dev libpcre3 libpcre3-dev libpcre3 libpcre3-dev python3-pip python3-socks python3-socks python3-unidecode 
+        sudo systemctl daemon-reload
+        sudo timedatectl set-timezone "Asia/Shanghai"
         git config --global user.name 'GitHub Actions' && git config --global user.email 'your-email@example.com'
 
     # 4. Clone source code
