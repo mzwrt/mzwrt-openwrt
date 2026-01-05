@@ -171,15 +171,9 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Set environment variables
-      run: |
-        echo "LLVM_CI_LLVM=false" >> $GITHUB_ENV
-
     # 8. Build firmware
     - name: Build firmware
       working-directory: /mnt/openwrt/openwrt
-      env:
-        RUSTFLAGS_BOOTSTRAP: download-ci-llvm=if-unchanged
       run: |
         echo "======================="
         echo "Space usage:"
@@ -188,7 +182,6 @@ jobs:
         echo "======================="
         pwd
         echo "======================="
-        export RUSTFLAGS_BOOTSTRAP=llvm.download-ci-llvm=if-unchanged
         make -j$(nproc) || make -j1 V=99
         echo "======================="
         echo "Space usage:"
