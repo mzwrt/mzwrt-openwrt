@@ -50,6 +50,7 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: |
         echo "======================="
+        sudo apt-get remove --purge -y llvm* clang* lld* llvm-dev libclang* libllvm* liblld* clang-format gcc* g++* build-essential rustc cargo make cmake autoconf automake pkg-config
         echo "======================="
         sudo apt-get remove --purge -yqq llvm
         echo "======================="
