@@ -119,7 +119,8 @@ jobs:
         echo "======================="
         pwd
         echo "======================="
-        make -j$(nproc) || make -j1 V=99
+        #make -j$(nproc) || make -j1 V=99
+        make -j1 V=99
         echo "======================="
         echo "Space usage:"
         echo "======================="
