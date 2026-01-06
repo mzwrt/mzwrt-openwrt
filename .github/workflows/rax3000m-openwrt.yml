@@ -149,9 +149,6 @@ jobs:
           tar -czf ./bin/targets/mediatek/filogic/packages.tar.gz -C ./bin/targets/mediatek/filogic packages
         fi
 
-        # 复制 .bin 文件到目标位置（假设无需修改，直接上传）
-        # 如果没有其他操作需要执行，可能不需要复制
-
         # 重命名文件：将所有以 "openwrt" 开头的文件名中的 "openwrt" 替换为 "MzWrt"
         find ./bin/targets/mediatek/filogic -type f -name "openwrt*" -exec bash -c '
           for file; do
@@ -160,7 +157,20 @@ jobs:
         ' bash {} +
 
         # 删除非 .bin 和 .tar.gz 文件
-        find ./bin/targets/mediatek/filogic -type f ! -name "*.bin" ! -name "*.tar.gz" -delete
+        if [ -d ./bin/targets/mediatek/filogic/packages ]; then
+          # 排除 packages.tar.gz，删除其他内容
+          find ./bin/targets/mediatek/filogic/packages -type f ! -name "*.bin" ! -name "*.tar.gz" -exec sudo rm -f {} +
+          # 直接删除整个 packages 目录及其内容
+          sudo rm -rf ./bin/targets/mediatek/filogic/packages
+        fi
+        echo "======================="
+
+        echo "Release name: ${{ steps.generate_name.outputs.RELEASE_NAME }}"
+        echo "======================="
+
+        ls /mnt/openwrt/openwrt/bin/targets/mediatek/filogic
+        echo "======================="
+
 
 
     # 11. Upload Artifact
