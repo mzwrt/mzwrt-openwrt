@@ -137,38 +137,44 @@ jobs:
         time=$(date +%Y%m%d%H%M%S)
         release_tag="$time"
         release_name="MzWrt-CMCC-RAX3000M-$(date +%Y%m%d)"
-        echo "RELEASE_TAG=$release_tag" >> $GITHUB_OUTPUT
-        echo "RELEASE_NAME=$release_name" >> $GITHUB_OUTPUT
+        echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_OUTPUT
+        echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_OUTPUT
 
     # 10. Prepare Firmware
     - name: Prepare Firmware
       working-directory: /mnt/openwrt/openwrt
       run: |
-        release_dir=./artifact/${{ steps.generate_name.outputs.RELEASE_NAME }}
-        mkdir -p "$release_dir"
+        # 检查并压缩 packages 目录
         if [ -d ./bin/targets/mediatek/filogic/packages ]; then
-          tar -czf "$release_dir/packages.tar.gz" -C ./bin/targets/mediatek/filogic packages
+          tar -czf ./bin/targets/mediatek/filogic/packages.tar.gz -C ./bin/targets/mediatek/filogic packages
         fi
-        cp ./bin/targets/mediatek/filogic/*.bin "$release_dir/"
-        find "$release_dir" -type f -name "openwrt*" -exec bash -c '
+
+        # 复制 .bin 文件到目标位置（假设无需修改，直接上传）
+        # 如果没有其他操作需要执行，可能不需要复制
+
+        # 重命名文件：将所有以 "openwrt" 开头的文件名中的 "openwrt" 替换为 "MzWrt"
+        find ./bin/targets/mediatek/filogic -type f -name "openwrt*" -exec bash -c '
           for file; do
             mv "$file" "${file//openwrt/MzWrt}"
           done
         ' bash {} +
-        find "$release_dir" -type f ! -name "*.bin" ! -name "*.tar.gz" -delete
+
+        # 删除非 .bin 和 .tar.gz 文件
+        find ./bin/targets/mediatek/filogic -type f ! -name "*.bin" ! -name "*.tar.gz" -delete
+
 
     # 11. Upload Artifact
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: CMCC-RAX3000M-MzWrt
-        path: /mnt/openwrt/openwrt/artifact/${{ steps.generate_name.outputs.RELEASE_NAME }}/*.{bin,tar.gz}
+        path: /mnt/openwrt/openwrt/bin/targets/mediatek/filogic${{ steps.generate_name.outputs.RELEASE_NAME }}/*.{bin,tar.gz}
 
     # 12. Create Release & Upload
     - name: Create Release & Upload
       uses: ncipollo/release-action@v1.14.0
       with:
-        artifacts: /mnt/openwrt/openwrt/artifact/${{ steps.generate_name.outputs.RELEASE_NAME }}/*.{bin,tar.gz}
+        artifacts: /mnt/openwrt/openwrt/bin/targets/mediatek/filogic${{ steps.generate_name.outputs.RELEASE_NAME }}/*.{bin,tar.gz}
         name: ${{ steps.generate_name.outputs.RELEASE_NAME }}
         tag: ${{ steps.generate_name.outputs.RELEASE_TAG }}
         body: CMCC-RAX3000M NAND firmware
