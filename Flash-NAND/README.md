@@ -2,8 +2,7 @@
 
 本指南面向 **NAND CMCC RAX3000M 路由器**，假设已经刷入了 H 大 U-Boot 或其他 U-BOOT。通过四个步骤，即可成功刷入固件。
 
-本指南同样适配刷入 openwrt 官方系统，如果你想用官方系统就将除 U-BOOT 以外的所有文件替换为 openwrt 官方文件即可
-
+本指南同样适配 openwrt 官方系统，如果你想用官方系统就将除 U-BOOT 以外的所有文件替换为 openwrt 官方文件即可
 
 
 > ⚠️ **注意**：刷机有风险，请确保电源稳定。按照步骤操作可降低风险。
@@ -17,17 +16,15 @@
 ## 准备工作 （仔细阅读！）
 
 1. 路由器为 **NAND 版本**。
-2. 已刷入 **H 大 U-Boot** 或 刷入其他 U-boot
-3. 浏览器和电脑在同一网络，浏览器可访问 `192.168.1.1`。
+2. 已刷入 **H 大 U-Boot** 或 刷入其他 U-boot 
+3. 浏览器和电脑在同一网络，浏览器可访问 `192.168.1.1`
 4. 下载提供的以下固件：
-   - `preloader.bin`
-   - `recovery.itb`
-   - `sysupgrade.itb`
+   - `MzWrt-mediatek-filogic-cmcc_rax3000m-nand-preloader.bin`
+   - `MzWrt-mediatek-filogic-cmcc_rax3000m-initramfs-recovery.itb`
+   - `MzWrt-mediatek-filogic-cmcc_rax3000m-squashfs-sysupgrade.itb`
 5. 准备好 U-Boot 固件：
    - `U-boot.bin` <a target="_blank" href="https://drive.wrt.moe/uboot/mediatek" target="_blank">下载链接</a>
-
-本页面也提供了所有文件，是基于openwrt官方的文件用于救砖，**mtd1_BL2.bin**是官方备份出来的，**preloader**是openwrt官方文件
-
+- **`下文称呼都以结尾单词进行称呼不再称呼全称`**  
 ### 固件文件解释
 
 - **`preloader.bin`**  
@@ -64,8 +61,9 @@
 
 ### **步骤 3：刷 Recovery**
 > ⚠️ **注意**：下面还有一步，能进后台不代表就可以食用了！！
-1. 在新的 U-Boot 中，刷入 ** recovery.itb** 文件。
-2. 完成后，路由器启动进入 ** 恢复模式**。
+1. 再次进入 U-boot <a href="http://192.168.1.1" target="_blank">http://192.168.1.1</a>
+2. 在新的 U-Boot 中，刷入 ** recovery.itb** 文件。
+3. 完成后，路由器启动进入 ** 恢复模式**。
    
 
 ---
