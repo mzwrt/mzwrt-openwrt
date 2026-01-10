@@ -35,7 +35,6 @@
 - **LuCI 界面**：固件内置 **LuCI** Web 界面，支持中文语言包，简化路由器的管理和配置。
 - **广告拦截功能**：集成 **luci-app-adguardhome**，提供本地 DNS 层级广告拦截，提升用户体验。
 - **OpenClash 支持**：集成 **luci-app-openclash**，提供多种加密代理功能，保障网络隐私和安全。
-- **SSR Plus 支持**：内置 **luci-app-ssr-plus**，支持 **Shadowsocks**、**V2Ray**、**Trojan** 等协议，增强网络的隐私保护。
 
 ### 6. 存储与文件管理
 
