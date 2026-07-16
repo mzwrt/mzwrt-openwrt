@@ -6,6 +6,9 @@
 
 **25.12 已经发布：https://github.com/mzwrt/mzwrt-25-12  建议使用24.10感觉稳定性更好**
 
+**如果usb挂载硬盘或EMMC版本，建议使用 fstrim 来增加硬盘寿命，固件支持 fstrim**
+
+
 **默认使用清华云源**
 
 **重点：WIFI 国家首选 CN 和 US 备选 CA**
