@@ -86,8 +86,8 @@ jobs:
             python3-pip python3-pyelftools python3-setuptools qemu-utils \
             rsync scons squashfs-tools subversion swig texinfo uglifyjs \
             unzip wget zlib1g-dev
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email '${{ secrets.GH_MAIL }}'
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
       - name: Clone OpenWrt source
         working-directory: ${{ env.WORK_ROOT }}
