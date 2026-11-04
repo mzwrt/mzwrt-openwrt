@@ -183,10 +183,13 @@ jobs:
           find "${OUT}" -maxdepth 1 -type f \( -name '*.bin' -o -name '*.tar.gz' -o -name '*.itb' \) \
             -exec cp -a {} "./${REL}/" \;
 
-          # 与旧流程相同路径：/mnt/openwrt/openwrt/release_notes.txt
           cp -f "${WORK_ROOT}/release_notes.txt" ./release_notes.txt
           ls -lah "./${REL}"
-          cat ./release_notes.txt
+          if [ -z "$(find "./${REL}" -maxdepth 1 -type f \( -name '*.bin' -o -name '*.tar.gz' -o -name '*.itb' \) -print -quit)" ]; then
+            echo "ERROR: no firmware artifacts collected into ${REL}" >&2
+            ls -lah "${OUT}" || true
+            exit 1
+          fi
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
