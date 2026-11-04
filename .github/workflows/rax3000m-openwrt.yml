@@ -5,16 +5,18 @@ on:
   workflow_dispatch:
     inputs:
       config_ref:
-        description: 'mzwrt/config 分支或 tag（先合入 config 优化后再用 main）'
+        description: 'mzwrt/config 的分支或 tag'
         required: false
         default: 'main'
   schedule:
-    # 每周五 21:00 UTC ≈ 周六 05:00 Asia/Shanghai
     - cron: '0 21 * * 5'
 
 concurrency:
   group: build-rax3000m-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: write
 
 jobs:
   Build_mt7981_rax3000m:
@@ -27,12 +29,12 @@ jobs:
       WORK_ROOT: /mnt/openwrt
 
     steps:
-      - name: Checkout build repo
+      - name: Checkout this repository
         uses: actions/checkout@v4
         with:
           path: build-repo
 
-      - name: Checkout config repo
+      - name: Checkout config repository
         uses: actions/checkout@v4
         with:
           repository: mzwrt/config
@@ -44,13 +46,18 @@ jobs:
         run: |
           set -euo pipefail
           sudo swapoff -a || true
+          sudo apt-get -y purge \
+            azure-cli\* docker\* ghc\* zulu\* hhvm\* llvm\* firefox\* google\* \
+            dotnet\* aspnetcore\* powershell\* openjdk\* adoptopenjdk\* \
+            mysql\* php\* mongodb\* moby\* snap\* || true
           sudo rm -rf \
             /usr/share/dotnet \
             /usr/local/lib/android \
             /opt/ghc \
             /opt/hostedtoolcache/CodeQL \
             /usr/local/.ghcup || true
-          sudo apt-get clean
+          sudo apt-get autoremove -y || true
+          sudo apt-get clean || true
           df -h
 
       - name: Prepare work directory
@@ -59,6 +66,7 @@ jobs:
           sudo mkdir -p "${WORK_ROOT}"
           sudo chown -R "${USER}:${USER}" "${WORK_ROOT}"
           cp -a config-repo/mzwrt-openwrt "${WORK_ROOT}/mzwrt-openwrt"
+          cp -f build-repo/release_notes.txt "${WORK_ROOT}/release_notes.txt"
           df -h "${WORK_ROOT}"
 
       - name: Install build dependencies
@@ -66,13 +74,12 @@ jobs:
           set -euo pipefail
           sudo timedatectl set-timezone "${TZ}"
           sudo apt-get update -yqq
-          # 不做 full-upgrade，避免宿主环境漂移影响可复现性
           sudo apt-get install -yqq --no-install-recommends \
             ack antlr3 asciidoc autoconf automake autopoint \
             binutils bison build-essential bzip2 ccache cmake cpio curl \
             device-tree-compiler ecj fastjar flex gawk gettext \
             gcc-multilib g++-multilib git gnutls-dev gperf haveged \
-            help2man intltool libelf-dev libgmp3-dev libltdl-dev \
+            help2man intltool jq libelf-dev libgmp3-dev libltdl-dev \
             libmpc-dev libmpfr-dev libncurses-dev libpython3-dev \
             libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp \
             nano ninja-build p7zip p7zip-full patch pkgconf python3 \
@@ -96,6 +103,12 @@ jobs:
           cp -f ../mzwrt-openwrt/diy1.sh ./
           chmod +x ./diy1.sh
           ./diy1.sh
+
+      - name: Display system info
+        run: |
+          uname -a
+          df -h
+          free -m
 
       - name: Update & Install feeds
         working-directory: ${{ env.WORK_ROOT }}/openwrt
@@ -150,37 +163,41 @@ jobs:
         run: |
           set -euo pipefail
           OUT="bin/targets/mediatek/filogic"
+          REL="${{ steps.generate_name.outputs.RELEASE_NAME }}"
+
           if [ -d "${OUT}/packages" ]; then
             tar -czf "${OUT}/packages.tar.gz" -C "${OUT}" packages
             rm -rf "${OUT}/packages"
           fi
-          # 将 openwrt 前缀重命名为 MzWrt
+
           find "${OUT}" -maxdepth 1 -type f -name 'openwrt*' -print0 | while IFS= read -r -d '' file; do
             mv "$file" "${file//openwrt/MzWrt}"
           done
-          mkdir -p "${OUT}/upload"
-          # 只收集固件与包归档，避免 brace glob 在 action 输入中失效
+
+          mkdir -p "./${REL}"
           find "${OUT}" -maxdepth 1 -type f \( -name '*.bin' -o -name '*.tar.gz' -o -name '*.itb' \) \
-            -exec cp -a {} "${OUT}/upload/" \;
-          ls -lah "${OUT}/upload"
+            -exec cp -a {} "./${REL}/" \;
+
+          # 与旧流程相同路径：/mnt/openwrt/openwrt/release_notes.txt
+          cp -f "${WORK_ROOT}/release_notes.txt" ./release_notes.txt
+          ls -lah "./${REL}"
+          cat ./release_notes.txt
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.generate_name.outputs.RELEASE_NAME }}
-          path: /mnt/openwrt/openwrt/bin/targets/mediatek/filogic/upload/*
+          path: /mnt/openwrt/openwrt/${{ steps.generate_name.outputs.RELEASE_NAME }}/*
           if-no-files-found: error
           retention-days: 30
 
-      - name: Create Release & Upload
+      - name: Create Release on this repository
         uses: ncipollo/release-action@v1.14.0
         with:
-          artifacts: /mnt/openwrt/openwrt/bin/targets/mediatek/filogic/upload/*
+          artifacts: /mnt/openwrt/openwrt/${{ steps.generate_name.outputs.RELEASE_NAME }}/*
           name: ${{ steps.generate_name.outputs.RELEASE_NAME }}
           tag: ${{ steps.generate_name.outputs.RELEASE_TAG }}
-          body: |
-            CMCC RAX3000M MzWrt firmware (NAND / eMMC images included when built).
-            OpenWrt base: see tag prefix.
-            Notes: custom Wi-Fi regdb patch retained; default qdisc fq_pie retained.
+          bodyFile: /mnt/openwrt/openwrt/release_notes.txt
           token: ${{ secrets.GITHUB_TOKEN }}
           artifactErrorsFailBuild: true
+          makeLatest: true
