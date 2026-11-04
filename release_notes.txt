@@ -1,10 +1,53 @@
-2026-02-27- 修复 EMMC 不能保存配置问题
-2026-03-1 修复NAT，修复加密
-2026-03-28 添加主题显示CPU温度和 WIFI芯片温度
-2026-03-29 修复CPU温度显示名称和 WIFI温度不显示
-2026-03-29 更新到24.10.6
-2026-03-30 修复固件漏洞，根据 openwrt 安全规则，关闭 CONFIG_KERNEL_MAGIC_SYSRQ 和 CONFIG_KERNEL_DEBUG_FS 增强安全性
-2026-04-01 修复WIFI信道和功率配置遗漏，CN-信道5G WIFI6和CA-全部信道，因改动很小未测试，对网络无影响只是配置不合规
-2026-04-14 针对网友wanjq1991 反馈不能跑满千兆问题，修复内核参数和网络抖动问题，修复后网络稳定性增加
-2026-06-24 从24.10.6升级到最新稳定版24.10.7
-2026-07-10 修改openclash版本为v0.47.055 因为以后版本删除了一键配置，需要最新版安装后手动更新一下即可
+# MzWrt · CMCC RAX3000M
+
+基于 OpenWrt 24.10.7 · MediaTek Filogic (MT7981)
+
+---
+
+## 本次优化（2026-11）
+
+### 稳定与安全
+- 面向 512MB 长期挂机：收敛内核无关子系统（memcg / MPTCP / io_uring / coredump 等），内核改为体积优先
+- OpenSSL：关闭 TLS compression 与 AFALG/devcrypto 引擎，降低加密路径异常风险；软件路径保留 ChaCha 优先
+- 关闭 Ruby YJIT；无线改为 `wpad-openssl`；去掉双 NTFS（保留 ntfs3）、SSR 残留符号等冗余包
+- 补齐 AdGuardHome 二进制与 eMMC 用 `f2fsck`
+- conntrack 调整为 32768，增加 `vm.min_free_kbytes`，降低 Clash/AGH 同开时的 OOM 概率
+
+### 国内：低延迟 · 高速率
+- 默认开启软/硬 **flow offloading**（MT7981 硬件转发）
+- 开启 **packet_steering**，减轻双核单边打满造成的延迟毛刺
+- 保留 BBR + `fq_pie`（按产品设定）
+
+### 跨境：OpenClash 吞吐
+- 放大 TCP 窗口（最大 8MB），`tcp_slow_start_after_idle=0`，并启用 MTU probing / TCP Fast Open
+- 出站建议：**Rule 模式 + 大陆 DIRECT + Fake-IP/TUN + 协议栈 System**，以便吃到本机 BBR
+- 详细说明见固件内：`/etc/mzwrt/openclash-tuning.txt`
+
+### 编译
+- 版本由 `mzwrt/config` 的 `version.conf` 统一维护（当前 24.10.7）
+- 本仓库 Actions 直接编译并发布 Release
+
+---
+
+## 历史更新
+
+| 日期 | 说明 |
+|------|------|
+| 2026-02-27 | 修复 EMMC 不能保存配置问题 |
+| 2026-03-01 | 修复 NAT，修复加密 |
+| 2026-03-28 | 主题显示 CPU 温度与 WIFI 芯片温度 |
+| 2026-03-29 | 修复 CPU / WIFI 温度显示；更新到 24.10.6 |
+| 2026-03-30 | 按 OpenWrt 安全建议关闭 `MAGIC_SYSRQ`、`DEBUG_FS` |
+| 2026-04-01 | 修复 WIFI 信道与功率配置遗漏（CN 5G Wi‑Fi 6 / CA 全信道） |
+| 2026-04-14 | 针对千兆跑不满与网络抖动优化内核参数，提升稳定性 |
+| 2026-06-24 | 升级到稳定版 24.10.7 |
+| 2026-07-10 | OpenClash 核心 v0.47.055（后续版本无「一键配置」，安装后请手动更新核心） |
+
+---
+
+## 使用提示
+
+- 默认源：清华大学镜像
+- Wi‑Fi 国家：首选 **CN**，备选 US / CA
+- USB / EMMC 建议定期 `fstrim`，延长存储寿命
+- NAND / EMMC 刷机说明见仓库 `Flash-NAND`、`Flash-EMMC`
