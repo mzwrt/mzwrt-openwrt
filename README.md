@@ -77,6 +77,126 @@
 | **OpenClash**    | 提供代理功能，支持多种加密协议，保障网络隐私和安全。              |
 | **AdGuardHome**  | 提供广告拦截功能，支持 **DNSSEC** 和 **DHCPv6**，增强 DNS 查询的安全性，防止广告和恶意网站的侵害。 |
 
+## 调优指南（RAX3000M / MT7981）
+
+目标：**国内直连低延迟、高速率**；**跨境走 OpenClash 尽量高吞吐**。两者不能靠「全局代理」同时拉满。
+
+固件内也可查看：`/etc/mzwrt/openclash-tuning.txt`
+
+### 1. 网络设置调优
+
+#### 固件已默认开启（一般不用改）
+
+| 项目 | 说明 |
+|------|------|
+| 软/硬 Flow Offloading | 国内 DIRECT 走 MT7981 硬件转发，降延迟、提吞吐 |
+| Packet Steering | 双核分散软中断，减轻单核打满毛刺 |
+| BBR + `fq_pie` | 拥塞控制与队列；本机出站 TCP 受益 |
+| TCP 窗口 / `slow_start_after_idle=0` | 利于跨境长肥管道 |
+| ZRAM | 512MB 内存更稳 |
+
+自检：
+
+```sh
+uci show firewall.@defaults[0] | grep flow
+uci get network.globals.packet_steering
+sysctl net.ipv4.tcp_congestion_control net.core.default_qdisc
+```
+
+期望大致为：`flow_offloading='1'`、`flow_offloading_hw='1'`、`packet_steering='1'`、`bbr`、`fq_pie`。
+
+#### 建议保持
+
+- **不要为了 OpenClash 长期关闭硬件卸载**，否则国内游戏/下载会明显变慢。
+- 有线测国内带宽与延迟；Wi‑Fi 再单独看信道干扰（国家码首选 **CN**）。
+- USB / EMMC 存储建议定期执行 `fstrim`，延长寿命。
+
+#### 可选微调（按需）
+
+```sh
+# 确认卸载已开（若被改掉）
+uci set firewall.@defaults[0].flow_offloading='1'
+uci set firewall.@defaults[0].flow_offloading_hw='1'
+uci commit firewall
+/etc/init.d/firewall restart
+
+uci set network.globals.packet_steering='1'
+uci commit network
+/etc/init.d/network restart
+```
+
+---
+
+### 2. OpenClash 调优（跨境）
+
+#### 推荐组合
+
+| 项 | 推荐 | 原因 |
+|----|------|------|
+| 运行模式 | **Rule** | 只有需要的流量走代理 |
+| 大陆分流 | 开启「绕过中国大陆 IP / 域名直连」 | 国内走 DIRECT，才能吃硬件卸载 |
+| 入站 | **Fake-IP + TUN** | 劫持完整、跨境解析快 |
+| 协议栈 | **System**（不要用 gvisor 追速度） | 出站 TCP 走内核，才能用上 BBR + 大窗口 |
+| 日常 | **不要 Global** | Global 会拖慢所有国内访问 |
+
+#### 节点与协议
+
+- 延迟低 ≠ 下载快；用 URL-Test / 自动选择看**实际下载**，不要只看延迟。
+- 优先质量稳定的落地：VLESS Reality、Trojan、Hysteria2、TUIC 等（按你的机场能力选）。
+- 少叠中转；MTU 异常时在节点或 TUN 里试 **1280～1400**。
+- 核心若支持，可开 **TCP 并发（tcp-concurrent）**。
+
+#### 与硬件卸载的关系
+
+- **DIRECT（国内）**：可被软/硬卸载 → 低延迟、高速率。
+- **PROXY（跨境）**：不走硬件卸载（正常）→ 速度主要看节点与 System 栈。
+- 若「开了 Clash 后国内也变慢」：先查是否误开 Global、大陆规则是否 DIRECT、卸载是否被关。
+
+---
+
+### 3. AdGuardHome（ADG）调优
+
+固件已集成 **LuCI + AdGuardHome 二进制**。重点是和 OpenClash **不要抢乱 DNS**。
+
+#### 推荐拓扑（二选一，不要叠两套 Fake-IP）
+
+**方案 A（稳妥，适合多数家庭）**
+
+1. 局域网设备 DNS → 路由器（或 AGH）。
+2. **AdGuardHome** 负责广告拦截 / 过滤。
+3. 需要代理的解析：AGH 上游指到 OpenClash 的 DNS（或混合端口）；国内可直连上游。
+4. OpenClash 开 DNS；Fake-IP 可开，异常域名再加白名单。
+
+**方案 B**
+
+- 局域网 DNS 直接指 AGH；AGH 上游走 Clash。
+- 同样：**AGH 与 Clash 不要无序双双占用 :53**。
+
+#### AGH 实用建议
+
+- 过滤列表：先少后多；列表过多会涨内存、拖慢解析（512MB 机器尤其注意）。
+- 开启合理缓存；不要同时开一堆重型 DNSSEC/并行上游导致超时。
+- 银行 / 游戏 / 公司 VPN 域名解析异常时：在 AGH 或 OpenClash 对域名**放行/白名单**，而不是关卸载。
+- 首次使用：在 LuCI → AdGuardHome 完成初始化，确认服务在跑、端口不与 dnsmasq/Clash 冲突。
+
+#### 自检
+
+```sh
+# AGH / DNS 相关进程与端口（按你实际安装路径可能略有不同）
+netstat -lntp 2>/dev/null | grep -E ':53|:3000|:8080' || ss -lntp | grep -E ':53|:3000'
+```
+
+客户端 `nslookup` 一个广告域名与一个国内域名，确认拦截与解析都正常；再开 OpenClash 测跨境站点。
+
+---
+
+### 4. 调优后建议验证
+
+1. **国内有线**：关代理或走 DIRECT，测延迟与带宽（应接近宽带口径）。
+2. **国内 Wi‑Fi / 游戏**：看延迟毛刺；必要时换信道，国家码 CN。
+3. **跨境**：只测代理节点下载；对比协议栈 System vs gvisor（应用 System）。
+4. 稳定观察：是否掉流、国内是否被 Global 拖慢、内存是否因 AGH 列表过多吃紧。
+
 ## 鸣谢
 
 感谢以下项目和开发者为本固件提供的支持和贡献：
