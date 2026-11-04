@@ -1,23 +1,26 @@
 name: Clean Up All Workflow Runs
 
 on:
-  workflow_dispatch:  # 允许手动触发清理工作流
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
       - name: Delete all workflow runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 获取所有工作流运行记录
-          runs=$(curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                    "https://api.github.com/repos/mzwrt/mzwrt-openwrt/actions/runs?per_page=100" \
-                    | jq -r '.workflow_runs[] | .id')
-
-          # 遍历并删除每个工作流运行记录
+          set -euo pipefail
+          # 需要 jq；ubuntu-latest 通常自带，缺失则安装
+          command -v jq >/dev/null || sudo apt-get install -yqq jq
+          runs="$(gh api --paginate "repos/${{ github.repository }}/actions/runs" \
+            --jq '.workflow_runs[].id')"
           for run_id in $runs; do
             echo "Deleting workflow run ID: $run_id"
-            curl -X DELETE \
-                 -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                 "https://api.github.com/repos/mzwrt/mzwrt-openwrt/actions/runs/$run_id"
+            gh api -X DELETE "repos/${{ github.repository }}/actions/runs/${run_id}" || true
           done

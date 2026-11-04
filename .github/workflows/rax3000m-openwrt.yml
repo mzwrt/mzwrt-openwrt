@@ -129,6 +129,8 @@ jobs:
 
       - name: Download packages
         working-directory: ${{ env.WORK_ROOT }}/openwrt
+        env:
+          CMAKE_POLICY_VERSION_MINIMUM: '3.5'
         run: |
           set -euo pipefail
           df -h
@@ -137,6 +139,9 @@ jobs:
 
       - name: Build firmware
         working-directory: ${{ env.WORK_ROOT }}/openwrt
+        env:
+          # diy2 里 export 无法跨 step；在此注入供 lucihttp 等旧 CMake 使用
+          CMAKE_POLICY_VERSION_MINIMUM: '3.5'
         run: |
           set -euo pipefail
           df -h
