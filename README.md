@@ -1,5 +1,18 @@
 # mzwrt OpenWrt 固件
 
+## 云编译说明
+
+固件已改回**在本仓库直接编译并发布 Release**（Actions：`Build_mt7981_rax3000m`）。
+
+| 项目 | 说明 |
+|------|------|
+| 编译仓库 | 本仓库 `mzwrt/mzwrt-openwrt` |
+| 配置仓库 | [`mzwrt/config`](https://github.com/mzwrt/config) 的 `mzwrt-openwrt/`（diy、`.config`、`version.conf`） |
+| 触发方式 | Actions → 手动 `workflow_dispatch`，或每周五定时 |
+| 旧流程 | 曾用 [`wq309629962/mzwrt-openwrt-build-dw`](https://github.com/wq309629962/mzwrt-openwrt-build-dw) 编译后再发到本仓；请在该仓 **停用 Actions / 取消 schedule**，避免重复发版 |
+
+本仓库 Secrets 需要：`GH_TOKEN`（读 config）、`GH_MAIL`（git 提交邮箱）。Release 使用默认 `GITHUB_TOKEN`。
+
 ## 简介
 
 本固件是基于 OpenWrt 系统定制化开发，专为 **CMCC RAX3000M** 路由器优化，旨在提供一个低延迟、高吞吐量、稳定高速的网络体验。固件启用了多种先进的网络优化技术和加密算法，同时深度定制化内核，针对 **MediaTek Filogic** 系列芯片做了专门的优化。

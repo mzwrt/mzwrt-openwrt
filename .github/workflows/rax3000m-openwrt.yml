@@ -200,7 +200,6 @@ jobs:
         uses: ncipollo/release-action@v1.14.0
         with:
           artifacts: /mnt/openwrt/openwrt/${{ steps.generate_name.outputs.RELEASE_NAME }}/*
-          excludeArtifacts: RELEASE_NOTES.md
           name: ${{ steps.generate_name.outputs.RELEASE_NAME }}
           tag: ${{ steps.generate_name.outputs.RELEASE_TAG }}
           bodyFile: /mnt/openwrt/RELEASE_NOTES.md
