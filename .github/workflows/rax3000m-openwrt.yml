@@ -1,191 +1,186 @@
 name: Build_mt7981_rax3000m
 
-on: 
+on:
   repository_dispatch:
   workflow_dispatch:
-
-  # 定时触发编译
+    inputs:
+      config_ref:
+        description: 'mzwrt/config 分支或 tag（先合入 config 优化后再用 main）'
+        required: false
+        default: 'main'
   schedule:
+    # 每周五 21:00 UTC ≈ 周六 05:00 Asia/Shanghai
     - cron: '0 21 * * 5'
+
+concurrency:
+  group: build-rax3000m-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   Build_mt7981_rax3000m:
     runs-on: ubuntu-latest
+    timeout-minutes: 720
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      TZ: Asia/Shanghai
+      OPENWRT_DIR: openwrt
+      WORK_ROOT: /mnt/openwrt
+
     steps:
-    - name: Get Actions Count
-      run: |
-          actions_count=$(gh run list --limit 10 --json status | grep "completed" | wc -l)
-          echo "Actions count: $actions_count"
-    # 1. Clone Repository
-    - name: Clone Repository
-      uses: actions/checkout@v4
+      - name: Checkout build repo
+        uses: actions/checkout@v4
+        with:
+          path: build-repo
 
-    # 2. Find and mount largest disk
-    - name: Find and mount largest disk
-      run: |
+      - name: Checkout config repo
+        uses: actions/checkout@v4
+        with:
+          repository: mzwrt/config
+          token: ${{ secrets.GH_TOKEN }}
+          ref: ${{ github.event.inputs.config_ref || 'main' }}
+          path: config-repo
+
+      - name: Free disk space
+        run: |
+          set -euo pipefail
+          sudo swapoff -a || true
+          sudo rm -rf \
+            /usr/share/dotnet \
+            /usr/local/lib/android \
+            /opt/ghc \
+            /opt/hostedtoolcache/CodeQL \
+            /usr/local/.ghcup || true
+          sudo apt-get clean
           df -h
-          largest_disk=$(lsblk -o NAME,SIZE,MOUNTPOINT | grep -vE 'MOUNTPOINT|/dev/loop' | sort -k2 -h | tail -n 1 | awk '{print $1}' | sed 's/^[^a-zA-Z0-9]*//g')
-          echo "Largest disk is /dev/$largest_disk"
-          sudo mkdir -p /mnt/openwrt
-          sudo chown -R $USER:$USER /mnt/openwrt
-          sudo mount /dev/$largest_disk /mnt/openwrt
-          df -h /mnt/openwrt
-          echo "/dev/$largest_disk /mnt/openwrt ext4 defaults 0 2" | sudo tee -a /etc/fstab
 
-    - name: Checkout private repository
-      uses: actions/checkout@v4
-      with:
-        repository: 'mzwrt/config'
-        token: ${{ secrets.GH_TOKEN }}
-        ref: 'main'
-      
-    - name: Move repo to /mnt/openwrt
-      run: |
-        sudo chown -R $USER:$USER ./mzwrt-openwrt
-        sudo mv ./mzwrt-openwrt /mnt/openwrt/
+      - name: Prepare work directory
+        run: |
+          set -euo pipefail
+          sudo mkdir -p "${WORK_ROOT}"
+          sudo chown -R "${USER}:${USER}" "${WORK_ROOT}"
+          cp -a config-repo/mzwrt-openwrt "${WORK_ROOT}/mzwrt-openwrt"
+          df -h "${WORK_ROOT}"
 
-    # 3. Initialization environment
-    - name: Initialization environment
-      env:
-        DEBIAN_FRONTEND: noninteractive
-      run: |
-        sudo apt-get update
-        sudo apt-get -yqq upgrade
-        sudo apt-get -yqq full-upgrade
-        sudo apt-get -yqq autoremove --purge
-        sudo apt-get -yqq autoclean
-        sudo apt-get -yqq clean
-        sudo apt-get install -yqq dos2unix python3-netifaces libfuse-dev libnuma-dev libfdt-dev libtorrent-rasterbar-dev clang golang rustc cargo m4 babeltrace libunwind-dev texinfo binutils binutils-gold liblzma-dev libzstd-dev autoconf automake ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip
-        sudo apt-get install -yqq cpanminus libfile-spec-perl build-essential python3-setuptools liblua5.1-0 libtool-bin libcrypto++-dev libpcre3 libpcre3-dev libpcre3 libpcre3-dev python3-pip python3-socks python3-socks python3-unidecode 
-        sudo systemctl daemon-reload
-        sudo timedatectl set-timezone "Asia/Shanghai"
-        git config --global user.name 'GitHub Actions' && git config --global user.email '${{ secrets.GH_MAIL }}'
+      - name: Install build dependencies
+        run: |
+          set -euo pipefail
+          sudo timedatectl set-timezone "${TZ}"
+          sudo apt-get update -yqq
+          # 不做 full-upgrade，避免宿主环境漂移影响可复现性
+          sudo apt-get install -yqq --no-install-recommends \
+            ack antlr3 asciidoc autoconf automake autopoint \
+            binutils bison build-essential bzip2 ccache cmake cpio curl \
+            device-tree-compiler ecj fastjar flex gawk gettext \
+            gcc-multilib g++-multilib git gnutls-dev gperf haveged \
+            help2man intltool libelf-dev libgmp3-dev libltdl-dev \
+            libmpc-dev libmpfr-dev libncurses-dev libpython3-dev \
+            libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp \
+            nano ninja-build p7zip p7zip-full patch pkgconf python3 \
+            python3-pip python3-pyelftools python3-setuptools qemu-utils \
+            rsync scons squashfs-tools subversion swig texinfo uglifyjs \
+            unzip wget zlib1g-dev
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email '${{ secrets.GH_MAIL }}'
 
-    # 4. Clone source code
-    - name: Clone source code
-      working-directory: /mnt/openwrt
-      env: 
-        REPO_URL: https://github.com/openwrt/openwrt.git
-        OPENWRT_VERSION: "v24.10.5"
-        OPENWRT_DIR: "openwrt"
-      run: |
-        git clone -b $OPENWRT_VERSION --single-branch --depth=1 $REPO_URL $OPENWRT_DIR
-        cd openwrt
-        cp -f ../mzwrt-openwrt/diy1.sh ./
-        chmod +x ./diy1.sh && ./diy1.sh
+      - name: Clone OpenWrt source
+        working-directory: ${{ env.WORK_ROOT }}
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC1091
+          source mzwrt-openwrt/version.conf
+          export OPENWRT_VER SDK_VER MZWRT_PACKAGE_REF
+          echo "Building OpenWrt v${OPENWRT_VER}"
+          git clone -b "v${OPENWRT_VER}" --single-branch --depth=1 \
+            https://github.com/openwrt/openwrt.git "${OPENWRT_DIR}"
+          cd "${OPENWRT_DIR}"
+          cp -f ../mzwrt-openwrt/diy1.sh ./
+          chmod +x ./diy1.sh
+          ./diy1.sh
 
-    # 5. Update & Install feeds
-    - name: Update & Install feeds
-      working-directory: /mnt/openwrt/openwrt
-      run: |
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
-        cp -f ../mzwrt-openwrt/diy2.sh ./
-        chmod +x ./diy2.sh && ./diy2.sh 
+      - name: Update & Install feeds
+        working-directory: ${{ env.WORK_ROOT }}/openwrt
+        run: |
+          set -euo pipefail
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          cp -f ../mzwrt-openwrt/diy2.sh ./
+          chmod +x ./diy2.sh
+          ./diy2.sh
 
-    # 6. Configuration Customization
-    - name: Configuration Customization - Build_mt7981_rax3000m
-      working-directory: /mnt/openwrt/openwrt
-      run: |
-        echo "======================="
-        echo "======================="
-        echo "======================="
+      - name: Configuration Customization
+        working-directory: ${{ env.WORK_ROOT }}/openwrt
+        run: |
+          set -euo pipefail
+          cp -f ../mzwrt-openwrt/rax3000m.config .config
+          make defconfig
 
-        cp -f ../mzwrt-openwrt/rax3000m.config ./
-        mv rax3000m.config .config
-        make defconfig
+      - name: Download packages
+        working-directory: ${{ env.WORK_ROOT }}/openwrt
+        run: |
+          set -euo pipefail
+          df -h
+          make download -j"$(nproc)"
+          find dl -type f -size -1024c -print -delete || true
 
-    # 7. Download package
-    - name: Download package
-      working-directory: /mnt/openwrt/openwrt
-      run: |
-        echo "======================="
-        echo "Space usage:"
-        echo "======================="
-        df -h
-        echo "======================="
-        make download -j16
-        find dl -size -1024c -exec ls -l {} \;
-        find dl -size -1024c -exec rm -f {} \;
+      - name: Build firmware
+        working-directory: ${{ env.WORK_ROOT }}/openwrt
+        run: |
+          set -euo pipefail
+          df -h
+          make -j"$(nproc)" || make -j1 V=s
+          df -h
+          ls -lah bin/targets/mediatek/filogic/
 
-    # 8. Build firmware
-    - name: Build firmware
-      working-directory: /mnt/openwrt/openwrt
-      run: |
-        echo "======================="
-        echo "Space usage:"
-        echo "======================="
-        df -h
-        echo "======================="
-        pwd
-        echo "======================="
-        make -j$(nproc) || make -j1 V=99
-        echo "======================="
-        echo "Space usage:"
-        echo "======================="
-        df -h
-        echo "======================="
-        du -h --max-depth=1 ./ --exclude=build_dir --exclude=bin
-        du -h --max-depth=1 ./build_dir
-        du -h --max-depth=1 ./bin
-        echo "======================="
+      - name: Generate Tag & Release Name
+        id: generate_name
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC1091
+          source "${WORK_ROOT}/mzwrt-openwrt/version.conf"
+          time_stamp="$(TZ=Asia/Shanghai date +%Y%m%d%H%M%S)"
+          day_stamp="$(TZ=Asia/Shanghai date +%Y%m%d)"
+          release_tag="v${OPENWRT_VER}-${time_stamp}"
+          release_name="MzWrt-CMCC-RAX3000M-${day_stamp}"
+          echo "RELEASE_TAG=${release_tag}" >> "${GITHUB_OUTPUT}"
+          echo "RELEASE_NAME=${release_name}" >> "${GITHUB_OUTPUT}"
+          echo "Tag=${release_tag} Name=${release_name}"
 
-    # 9. Generate Tag & Release Name
-    - name: Generate Tag & Release Name
-      id: generate_name
-      run: |
-        time=$(date +%Y%m%d%H%M%S)
-        release_tag="$time"
-        release_name="MzWrt-CMCC-RAX3000M-$(date +%Y%m%d)"
-        echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_OUTPUT
-        echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_OUTPUT
-
-    # 10. Prepare Firmware
-    - name: Prepare Firmware
-      working-directory: /mnt/openwrt/openwrt
-      run: |
-        # 检查并压缩 packages 目录
-        if [ -d ./bin/targets/mediatek/filogic/packages ]; then
-          tar -czf ./bin/targets/mediatek/filogic/packages.tar.gz -C ./bin/targets/mediatek/filogic packages
-        fi
-
-        # 重命名文件：将所有以 "openwrt" 开头的文件名中的 "openwrt" 替换为 "MzWrt"
-        find ./bin/targets/mediatek/filogic -type f -name "openwrt*" -exec bash -c '
-          for file; do
+      - name: Prepare Firmware
+        working-directory: ${{ env.WORK_ROOT }}/openwrt
+        run: |
+          set -euo pipefail
+          OUT="bin/targets/mediatek/filogic"
+          if [ -d "${OUT}/packages" ]; then
+            tar -czf "${OUT}/packages.tar.gz" -C "${OUT}" packages
+            rm -rf "${OUT}/packages"
+          fi
+          # 将 openwrt 前缀重命名为 MzWrt
+          find "${OUT}" -maxdepth 1 -type f -name 'openwrt*' -print0 | while IFS= read -r -d '' file; do
             mv "$file" "${file//openwrt/MzWrt}"
           done
-        ' bash {} +
+          mkdir -p "${OUT}/upload"
+          # 只收集固件与包归档，避免 brace glob 在 action 输入中失效
+          find "${OUT}" -maxdepth 1 -type f \( -name '*.bin' -o -name '*.tar.gz' -o -name '*.itb' \) \
+            -exec cp -a {} "${OUT}/upload/" \;
+          ls -lah "${OUT}/upload"
 
-        # 删除非 .bin 和 .tar.gz 文件
-        if [ -d ./bin/targets/mediatek/filogic/packages ]; then
-          # 排除 packages.tar.gz，删除其他内容
-          find ./bin/targets/mediatek/filogic/packages -type f ! -name "*.bin" ! -name "*.tar.gz" -exec sudo rm -f {} +
-          # 直接删除整个 packages 目录及其内容
-          sudo rm -rf ./bin/targets/mediatek/filogic/packages
-        fi
-        echo "======================="
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.generate_name.outputs.RELEASE_NAME }}
+          path: /mnt/openwrt/openwrt/bin/targets/mediatek/filogic/upload/*
+          if-no-files-found: error
+          retention-days: 30
 
-        echo "Release name: ${{ steps.generate_name.outputs.RELEASE_NAME }}"
-        echo "======================="
-
-        ls /mnt/openwrt/openwrt/bin/targets/mediatek/filogic
-        echo "======================="
-
-
-
-    # 11. Upload Artifact
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: CMCC-RAX3000M-MzWrt
-        path: /mnt/openwrt/openwrt/bin/targets/mediatek/filogic${{ steps.generate_name.outputs.RELEASE_NAME }}/*.{bin,tar.gz}
-
-    # 12. Create Release & Upload
-    - name: Create Release & Upload
-      uses: ncipollo/release-action@v1.14.0
-      with:
-        artifacts: /mnt/openwrt/openwrt/bin/targets/mediatek/filogic${{ steps.generate_name.outputs.RELEASE_NAME }}/*.{bin,tar.gz}
-        name: ${{ steps.generate_name.outputs.RELEASE_NAME }}
-        tag: ${{ steps.generate_name.outputs.RELEASE_TAG }}
-        body: CMCC-RAX3000M NAND firmware
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release & Upload
+        uses: ncipollo/release-action@v1.14.0
+        with:
+          artifacts: /mnt/openwrt/openwrt/bin/targets/mediatek/filogic/upload/*
+          name: ${{ steps.generate_name.outputs.RELEASE_NAME }}
+          tag: ${{ steps.generate_name.outputs.RELEASE_TAG }}
+          body: |
+            CMCC RAX3000M MzWrt firmware (NAND / eMMC images included when built).
+            OpenWrt base: see tag prefix.
+            Notes: custom Wi-Fi regdb patch retained; default qdisc fq_pie retained.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifactErrorsFailBuild: true
