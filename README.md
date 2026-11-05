@@ -152,6 +152,20 @@ uci commit network
 - **PROXY（跨境）**：不走硬件卸载（正常）→ 速度主要看节点与 System 栈。
 - 若「开了 Clash 后国内也变慢」：先查是否误开 Global、大陆规则是否 DIRECT、卸载是否被关。
 
+#### 更新内核：下载 100% 后显示「更新失败」
+
+`clash-linux-arm64.tar.gz` 对 RAX3000M（MT7981 / aarch64）是**正确文件名**（Meta 内核）。  
+进度到 100% 只表示下载结束；脚本接着会：`gzip -t` → `tar` 解压出 `clash` → `chmod` → 执行 `-v` 校验 → 改名为 `clash_meta`。任一步失败都会报「更新失败」。
+
+按优先级排查：
+
+1. **看日志里的具体错误**（最关键）：`logread -e openclash` 或插件「运行日志」。新版会写出 `gzip`/`tar`/`chmod`/`-v` 的失败原因。
+2. **CDN**：插件设置 → Github 地址修改 → 选 `jsdelivr` / `fastly.jsdelivr` 等，再更新（国内直连 raw.githubusercontent 常下到损坏包，进度仍可能到 100%）。
+3. **空间**：`df -h /overlay`；内核约十余 MB。
+4. **手动上传**：从 [OpenClash meta/arm64](https://github.com/vernesong/OpenClash/tree/core/master/meta) 取同名包，插件页上传；或解压后把二进制放到 `/etc/openclash/core/clash_meta`，`chmod 755`，再 ` /etc/openclash/core/clash_meta -v` 确认能输出版本。
+
+固件侧需具备：`curl`/`wget-ssl`、`gzip`、`tar`（TAR_GZIP）、`ca-bundle`/`ca-certificates`。若某版精简掉了 `gzip`，下载能到 100%，但 `gzip -t` 会直接导致更新失败——请用已补回这些包的固件。
+
 ---
 
 ### 3. AdGuardHome（ADG）调优
