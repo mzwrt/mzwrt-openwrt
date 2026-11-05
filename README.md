@@ -152,16 +152,19 @@ uci commit network
 - **PROXY（跨境）**：不走硬件卸载（正常）→ 速度主要看节点与 System 栈。
 - 若「开了 Clash 后国内也变慢」：先查是否误开 Global、大陆规则是否 DIRECT、卸载是否被关。
 
-#### 更新内核卡在 100%
+#### 更新内核：下载 100% 后显示「更新失败」
 
-界面到 100% 只表示下载进度条走完，后面还要 **解压 → 校验 `-v` → 替换**。卡死常见原因：
+`clash-linux-arm64.tar.gz` 对 RAX3000M（MT7981 / aarch64）是**正确文件名**（Meta 内核）。  
+进度到 100% 只表示下载结束；脚本接着会：`gzip -t` → `tar` 解压出 `clash` → `chmod` → 执行 `-v` 校验 → 改名为 `clash_meta`。任一步失败都会报「更新失败」。
 
-1. **直连 GitHub 不稳**（国内最常见）：OpenClash → 插件设置 → 把 **Meta 内核 CDN** 改成 `jsdelivr` / `fastgit` 等再更。
-2. **空间不够**：`df -h /overlay`，内核约数 MB，空间紧时会停在解压/写入。
-3. **手动上传**：插件页「手动上传」Meta 内核（选 `linux-arm64` / `mihomo`），绕过在线下载。
-4. 看日志：`logread -e openclash` 或插件「运行日志」，确认是下载失败还是 `tar`/校验失败。
+按优先级排查：
 
-固件侧已保留 `curl`、`wget-ssl`、`tar`（含 gzip）、`ca-bundle`/`ca-certificates`，一般不是缺工具；优先改 CDN 或手动上传。
+1. **看日志里的具体错误**（最关键）：`logread -e openclash` 或插件「运行日志」。新版会写出 `gzip`/`tar`/`chmod`/`-v` 的失败原因。
+2. **CDN**：插件设置 → Github 地址修改 → 选 `jsdelivr` / `fastly.jsdelivr` 等，再更新（国内直连 raw.githubusercontent 常下到损坏包，进度仍可能到 100%）。
+3. **空间**：`df -h /overlay`；内核约十余 MB。
+4. **手动上传**：从 [OpenClash meta/arm64](https://github.com/vernesong/OpenClash/tree/core/master/meta) 取同名包，插件页上传；或解压后把二进制放到 `/etc/openclash/core/clash_meta`，`chmod 755`，再 ` /etc/openclash/core/clash_meta -v` 确认能输出版本。
+
+固件侧需具备：`curl`/`wget-ssl`、`gzip`、`tar`（TAR_GZIP）、`ca-bundle`/`ca-certificates`。若某版精简掉了 `gzip`，下载能到 100%，但 `gzip -t` 会直接导致更新失败——请用已补回这些包的固件。
 
 ---
 
